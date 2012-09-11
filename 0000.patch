@@ -1,0 +1,11 @@
+--- a/neubot-0.4.14/neubot/utils_sysdirs.py 2012-09-11 16:19:12.000000000 +0200
++++ b/neubot-0.4.14/neubot/utils_sysdirs.py 2012-09-11 16:19:29.000000000 +0200
+@@ -53,7 +53,7 @@
+ # a folder called ``www``.
+ #
+ if not hasattr(sys, 'frozen'):
+-    WWWDIR = os.sep.join([ROOTDIR, 'neubot/www'])
++    WWWDIR = os.sep.join([ROOTDIR, 'neubot', 'www'])
+ else:
+     WWWDIR = os.sep.join([ROOTDIR, 'www'])
+ 
