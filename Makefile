@@ -37,6 +37,5 @@ all:
 			$(SOURCE).sig $(SOURCE)
 	tar -xzf $(SOURCE)
 	for PATCH in $$(ls *.patch); do					\
-		echo $$PATCH; \
 		git apply $$PATCH;					\
 	done
