@@ -1,0 +1,90 @@
+From 8c1d67f6b33887da87c96ffeded1d65ac91ae05c Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 20:03:01 +0200
+Subject: [PATCH 06/11] win32: write startup/shutdown log messages
+
+---
+ neubot/background_win32.py |  6 ++++++
+ neubot/log.py              | 10 +++++-----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/neubot/background_win32.py b/neubot/background_win32.py
+index ef38071..a6368bc 100644
+--- a/neubot/background_win32.py
++++ b/neubot/background_win32.py
+@@ -23,6 +23,7 @@
+ ''' Run in background on Win32 '''
+ 
+ import getopt
++import logging
+ import os
+ import sys
+ 
+@@ -65,6 +66,8 @@ def main(args):
+     #
+     LOG.use_database()
+ 
++    logging.info('Neubot 0.4.14 for Windows: starting up')
++
+     # Complain if privacy settings are not OK
+     privacy.complain_if_needed()
+ 
+@@ -75,6 +78,9 @@ def main(args):
+ 
+     POLLER.loop()
+ 
++    logging.info('Neubot 0.4.14 for Windows: shutting down')
++    LOG.writeback()
++
+     #
+     # Make sure that we do not leave the database
+     # in an inconsistent state.
+diff --git a/neubot/log.py b/neubot/log.py
+index c7ba3c0..39e1a81 100644
+--- a/neubot/log.py
++++ b/neubot/log.py
+@@ -182,7 +182,7 @@ class Logger(object):
+         POLLER.sched(INTERVAL, self._maintain_database)
+ 
+         if (self._use_database and not NOTIFIER.is_subscribed("testdone")):
+-            self._writeback()
++            self.writeback()
+ 
+     #
+     # We don't want to log into the database when we run
+@@ -196,7 +196,7 @@ class Logger(object):
+         self.logger = system.get_background_logger()
+         system.redirect_to_dev_null()
+ 
+-    def __writeback(self):
++    def _writeback(self):
+         """Really commit pending log records into the database"""
+ 
+         connection = DATABASE.connection()
+@@ -209,12 +209,12 @@ class Logger(object):
+         connection.execute("VACUUM;")
+         connection.commit()
+ 
+-    def _writeback(self):
++    def writeback(self):
+         """Commit pending log records into the database"""
+ 
+         # At least do not crash
+         try:
+-            self.__writeback()
++            self._writeback()
+         except (KeyboardInterrupt, SystemExit):
+             raise
+         except:
+@@ -281,7 +281,7 @@ class Logger(object):
+ 
+             self._queue.append(record)
+             if commit:
+-                self._writeback()
++                self.writeback()
+ 
+         # Write to the current logger object
+         self.logger(severity, message)
+-- 
+Simone Basso
+

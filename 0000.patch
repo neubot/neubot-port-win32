@@ -1,0 +1,25 @@
+From e1415b1194906ed1acedac8babbf737dd26ceac8 Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 19:18:08 +0200
+Subject: [PATCH 01/11] utils_sysdirs.py: fix WWWDIR for win32 non-py2exe case
+
+---
+ neubot/utils_sysdirs.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/neubot/utils_sysdirs.py b/neubot/utils_sysdirs.py
+index ef94de4..e510354 100644
+--- a/neubot/utils_sysdirs.py
++++ b/neubot/utils_sysdirs.py
+@@ -53,7 +53,7 @@ if hasattr(sys, 'frozen'):
+ # a folder called ``www``.
+ #
+ if not hasattr(sys, 'frozen'):
+-    WWWDIR = os.sep.join([ROOTDIR, 'neubot/www'])
++    WWWDIR = os.sep.join([ROOTDIR, 'neubot', 'www'])
+ else:
+     WWWDIR = os.sep.join([ROOTDIR, 'www'])
+ 
+-- 
+Simone Basso
+

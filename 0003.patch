@@ -1,0 +1,84 @@
+From efadb7d08491d2b49ab8d0164417e7de0b27caea Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 19:55:17 +0200
+Subject: [PATCH 04/11] Reimplement start -k without race conditions
+
+---
+ neubot/main_win32.py    | 20 +++++++++++---------
+ neubot/updater_win32.py |  4 +---
+ neubot/utils_ctl.py     |  5 ++++-
+ 3 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/neubot/main_win32.py b/neubot/main_win32.py
+index f610cdd..4ca2de9 100644
+--- a/neubot/main_win32.py
++++ b/neubot/main_win32.py
+@@ -52,16 +52,18 @@ def subcommand_start(args):
+             kill = True
+ 
+     #
+-    # TODO When ``-k``, we must not proceed until the parent
+-    # is exited and has released the listening socket.  At the
+-    # moment, this works but there is a race between the parent
+-    # process closing, and the child process listening on the
+-    # new socket.
++    # Wait for the parent to die, so that it closes the listening
++    # socket and we can successfully bind() it.
+     #
+-    if kill:
+-        running = utils_ctl.is_running('127.0.0.1', '9774')
+-        if running:
+-            utils_ctl.stop('127.0.0.1', '9774')
++    count = 0
++    while kill:
++        running = utils_ctl.is_running('127.0.0.1', '9774', quick=1)
++        if not running:
++            break
++        utils_ctl.stop('127.0.0.1', '9774')
++        count += 1
++        if count > 512:
++            sys.exit('FATAL: cannot stop neubot daemon')
+ 
+     # Lazy import
+     from neubot import background_win32
+diff --git a/neubot/updater_win32.py b/neubot/updater_win32.py
+index 6b5db4a..ad2df3c 100644
+--- a/neubot/updater_win32.py
++++ b/neubot/updater_win32.py
+@@ -106,9 +106,7 @@ class UpdaterWin32(UpdaterRunner):
+         # its own listening socket.  The ``-k`` argument on the
+         # command line instructs the child process to request this
+         # process to exit.  Of course the child does that before
+-        # attempting to listen a new socket.  Still, there is a
+-        # potential race, which means that the child process has
+-        # to wait until this process' socket is closed.
++        # attempting to listen a new socket.
+         #
+         logging.info('updater_win32: about to exec: %s', cmdline_k)
+         subprocess.Popen(cmdline_k, close_fds=True)
+diff --git a/neubot/utils_ctl.py b/neubot/utils_ctl.py
+index d1e1962..318d7d6 100644
+--- a/neubot/utils_ctl.py
++++ b/neubot/utils_ctl.py
+@@ -31,7 +31,7 @@ import socket
+ import sys
+ import time
+ 
+-def is_running(address, port, verbose=0):
++def is_running(address, port, verbose=0, quick=0):
+ 
+     ''' Returns True if Neubot is running '''
+ 
+@@ -84,6 +84,9 @@ def is_running(address, port, verbose=0):
+             logging.debug('checking whether neubot daemon is running... YES')
+             return True
+ 
++        if quick:
++            break
++
+         logging.debug('daemon not running... retrying in one second...')
+         time.sleep(1)
+ 
+-- 
+Simone Basso
+

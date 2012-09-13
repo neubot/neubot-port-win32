@@ -1,0 +1,114 @@
+From 35c000bae25bdf790125053069acfba4010a4fbf Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 19:59:10 +0200
+Subject: [PATCH 05/11] api/server: /api/exit: _immediately_ break the loop
+
+---
+ neubot/api/server.py  | 6 ++++--
+ neubot/http/server.py | 6 ++++--
+ neubot/net/poller.py  | 8 ++++----
+ neubot/poller.py      | 1 +
+ 4 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/neubot/api/server.py b/neubot/api/server.py
+index 6ed5a62..660ace0 100644
+--- a/neubot/api/server.py
++++ b/neubot/api/server.py
+@@ -37,12 +37,14 @@ from neubot.config import ConfigError
+ from neubot.debug import objgraph
+ from neubot.http.message import Message
+ from neubot.http.server import ServerHTTP
+-from neubot.net.poller import POLLER
+ from neubot.notify import NOTIFIER
+ from neubot.state import STATECHANGE
+ from neubot.speedtest.client import QUEUE_HISTORY
+ from neubot.state import STATE
+ 
++from neubot.poller import POLLER
++from neubot.poller import StopPoller
++
+ from neubot import config_api
+ from neubot import privacy
+ from neubot import log_api
+@@ -191,4 +193,4 @@ class ServerAPI(ServerHTTP):
+     def _api_exit(stream, request, query):
+         ''' Implements /api/exit URI '''
+         # Break out of the loop immediately
+-        POLLER.break_loop()
++        raise StopPoller('Received /api/exit request')
+diff --git a/neubot/http/server.py b/neubot/http/server.py
+index b3362bc..7e166f6 100644
+--- a/neubot/http/server.py
++++ b/neubot/http/server.py
+@@ -40,7 +40,9 @@ from neubot.http.stream import nextstate
+ from neubot.http.stream import StreamHTTP
+ from neubot.log import LOG
+ from neubot.net.stream import StreamHandler
+-from neubot.net.poller import POLLER
++
++from neubot.poller import POLLER
++from neubot.poller import StopPoller
+ 
+ from neubot.main import common
+ from neubot import system
+@@ -261,7 +263,7 @@ class ServerHTTP(StreamHandler):
+         ''' Invoked when we got a request '''
+         try:
+             self.process_request(stream, request)
+-        except (KeyboardInterrupt, SystemExit):
++        except (KeyboardInterrupt, SystemExit, StopPoller):
+             raise
+         except:
+             self._on_internal_error(stream, request)
+diff --git a/neubot/net/poller.py b/neubot/net/poller.py
+index 1056c42..029eb55 100644
+--- a/neubot/net/poller.py
++++ b/neubot/net/poller.py
+@@ -127,7 +127,7 @@ class Poller(sched.scheduler):
+         ''' Safely run task '''
+         try:
+             task.func()
+-        except (KeyboardInterrupt, SystemExit):
++        except (KeyboardInterrupt, SystemExit, StopPoller):
+             raise
+         except:
+             logging.error(str(asyncore.compact_traceback()))
+@@ -158,7 +158,7 @@ class Poller(sched.scheduler):
+         self.unset_writable(stream)
+         try:
+             stream.handle_close()
+-        except (KeyboardInterrupt, SystemExit):
++        except (KeyboardInterrupt, SystemExit, StopPoller):
+             raise
+         except:
+             logging.error(str(asyncore.compact_traceback()))
+@@ -181,7 +181,7 @@ class Poller(sched.scheduler):
+             stream = self.readset[fileno]
+             try:
+                 stream.handle_read()
+-            except (KeyboardInterrupt, SystemExit):
++            except (KeyboardInterrupt, SystemExit, StopPoller):
+                 raise
+             except:
+                 logging.error(str(asyncore.compact_traceback()))
+@@ -193,7 +193,7 @@ class Poller(sched.scheduler):
+             stream = self.writeset[fileno]
+             try:
+                 stream.handle_write()
+-            except (KeyboardInterrupt, SystemExit):
++            except (KeyboardInterrupt, SystemExit, StopPoller):
+                 raise
+             except:
+                 logging.error(str(asyncore.compact_traceback()))
+diff --git a/neubot/poller.py b/neubot/poller.py
+index 29907db..44dc22a 100644
+--- a/neubot/poller.py
++++ b/neubot/poller.py
+@@ -23,3 +23,4 @@
+ ''' I/O events poller and dispatcher '''
+ 
+ from neubot.net.poller import POLLER
++from neubot.net.poller import StopPoller
+-- 
+Simone Basso
+

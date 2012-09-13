@@ -1,0 +1,56 @@
+From b5d1f287a5b3ed315447a70aab52258ce3cdf540 Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 19:24:19 +0200
+Subject: [PATCH 03/11] main_win32: implement status -v
+
+---
+ neubot/main_win32.py | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/neubot/main_win32.py b/neubot/main_win32.py
+index 54d8c95..f610cdd 100644
+--- a/neubot/main_win32.py
++++ b/neubot/main_win32.py
+@@ -71,15 +71,25 @@ def subcommand_status(args):
+     ''' Status subcommand '''
+ 
+     try:
+-        options, arguments = getopt.getopt(args[1:], '')
++        options, arguments = getopt.getopt(args[1:], 'v')
+     except getopt.error:
+-        sys.exit('usage: neubot status')
+-    if options or arguments:
+-        sys.exit('usage: neubot status')
++        sys.exit('usage: neubot status [-v]')
++    if arguments:
++        sys.exit('usage: neubot status [-v]')
++
++    verbose = 0
++    for opt in options:
++        if opt[0] == '-v':
++            verbose = 1
+ 
+     running = utils_ctl.is_running('127.0.0.1', '9774')
++    if verbose:
++        if not running:
++            sys.stdout.write('Neubot is NOT running\n')
++        else:
++            sys.stdout.write('Neubot is running\n')
+     if not running:
+-        sys.exit('ERROR: neubot is not running')
++        sys.exit(1)
+ 
+ def subcommand_stop(args):
+     ''' Stop subcommand '''
+@@ -101,7 +111,7 @@ USAGE = '''\
+ usage: neubot -h|--help
+        neubot -V
+        neubot start [-k]
+-       neubot status
++       neubot status [-v]
+        neubot stop
+        neubot subcommand [option]... [argument]...
+ '''
+-- 
+Simone Basso
+

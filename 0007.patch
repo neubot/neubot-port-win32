@@ -1,0 +1,119 @@
+From 082452c8b9dd43d03fb1aa810d9eaeef7b957d9a Mon Sep 17 00:00:00 2001
+From: Simone Basso <bassosimone@gmail.com>
+Date: Thu, 13 Sep 2012 21:03:17 +0200
+Subject: [PATCH 08/11] API server: Tolerate RST and treat it like EOF
+
+On windows, I see very often that the connection is resetted
+when I switch page.  Introduce some more complexity into stream,
+to allow to treat RST like EOF for the API server.
+---
+ neubot/background_api.py |  3 +++
+ neubot/http/server.py    |  2 ++
+ neubot/net/stream.py     | 22 +++++++++++++++++++++-
+ 3 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/neubot/background_api.py b/neubot/background_api.py
+index c86f270..fc9f9c5 100644
+--- a/neubot/background_api.py
++++ b/neubot/background_api.py
+@@ -54,6 +54,9 @@ def start(address, port):
+     # Bind HTTP server to API server
+     HTTP_SERVER.register_child(API_SERVER, '/api')
+ 
++    # Tolerate RSTs
++    HTTP_SERVER.tolerate_rst = 1
++
+     # Bind HTTP server to address and port
+     HTTP_SERVER.listen((address, port))
+ 
+diff --git a/neubot/http/server.py b/neubot/http/server.py
+index 7e166f6..81c40df 100644
+--- a/neubot/http/server.py
++++ b/neubot/http/server.py
+@@ -148,6 +148,7 @@ class ServerHTTP(StreamHandler):
+     def __init__(self, poller):
+         ''' Initialize the HTTP server '''
+         StreamHandler.__init__(self, poller)
++        self.tolerate_rst = 0
+         self._ssl_ports = set()
+         self.childs = {}
+ 
+@@ -280,6 +281,7 @@ class ServerHTTP(StreamHandler):
+     def connection_made(self, sock, endpoint, rtt):
+         ''' Invoked when the connection is made '''
+         stream = ServerStream(self.poller)
++        stream.tolerate_rst = self.tolerate_rst
+         nconf = self.conf.copy()
+ 
+         #
+diff --git a/neubot/net/stream.py b/neubot/net/stream.py
+index 3f58a00..ffc2d55 100644
+--- a/neubot/net/stream.py
++++ b/neubot/net/stream.py
+@@ -54,7 +54,7 @@ from neubot import utils_net
+ from neubot.main import common
+ 
+ # States returned by the socket model
+-STATES = [SUCCESS, ERROR, WANT_READ, WANT_WRITE] = range(4)
++STATES = [SUCCESS, ERROR, WANT_READ, WANT_WRITE, CONNRESET] = range(5)
+ 
+ # Maximum amount of bytes we read from a socket
+ MAXBUF = 1 << 18
+@@ -114,6 +114,8 @@ class SocketWrapper(object):
+         except socket.error, exception:
+             if exception[0] in SOFT_ERRORS:
+                 return WANT_READ, ""
++            elif exception[0] == errno.ECONNRESET:
++                return CONNRESET, exception
+             else:
+                 return ERROR, exception
+ 
+@@ -124,6 +126,8 @@ class SocketWrapper(object):
+         except socket.error, exception:
+             if exception[0] in SOFT_ERRORS:
+                 return WANT_WRITE, 0
++            elif exception[0] == errno.ECONNRESET:
++                return CONNRESET, exception
+             else:
+                 return ERROR, exception
+ 
+@@ -157,6 +161,8 @@ class Stream(Pollable):
+         self.opaque = None
+         self.atclosev = set()
+ 
++        self.tolerate_rst = 0
++
+     def __repr__(self):
+         return "stream %s" % self.logname
+ 
+@@ -301,6 +307,13 @@ class Stream(Pollable):
+             self.send_blocked = True
+             return
+ 
++        if status == CONNRESET:
++            if self.tolerate_rst:
++                logging.debug('stream: treating RST as EOF')
++                status, octets = SUCCESS, ""
++            else:
++                status = ERROR
++
+         if status == SUCCESS and not octets:
+             self.eof = True
+             self.poller.close(self)
+@@ -404,6 +417,13 @@ class Stream(Pollable):
+             self.recv_blocked = True
+             return
+ 
++        if status == CONNRESET:
++            if self.tolerate_rst:
++                logging.debug('stream: treating RST as EOF')
++                status, count = SUCCESS, 0
++            else:
++                status = ERROR
++
+         if status == ERROR:
+             # Here count is the exception that occurred
+             raise count
+-- 
+Simone Basso
+
