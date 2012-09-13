@@ -4,10 +4,10 @@ Date:   Tue Sep 11 15:24:31 2012 +0200
 
     updater: allow to configure win32 update check interval
 
-diff --git a/neubot/config.py b/neubot/config.py
+diff --git a/neubot-0.4.14/neubot/config.py b/neubot-0.4.14/neubot/config.py
 index 8b9ef39..6b4683d 100644
---- a/neubot/config.py
-+++ b/neubot/config.py
+--- a/neubot-0.4.14/neubot/config.py
++++ b/neubot-0.4.14/neubot/config.py
 @@ -216,8 +216,9 @@ CONFIG.register_defaults({
      "uuid": "",
      "version": "",
@@ -28,10 +28,10 @@ index 8b9ef39..6b4683d 100644
 +    "win32_updater_interval": "Interval between check for updates",
 +    "www.lang": "Web GUI language (`default' means: use browser default)",
  })
-diff --git a/neubot/updater_runner.py b/neubot/updater_runner.py
+diff --git a/neubot-0.4.14/neubot/updater_runner.py b/neubot-0.4.14/neubot/updater_runner.py
 index 1788746..968cd5c 100644
---- a/neubot/updater_runner.py
-+++ b/neubot/updater_runner.py
+--- a/neubot-0.4.14/neubot/updater_runner.py
++++ b/neubot-0.4.14/neubot/updater_runner.py
 @@ -75,7 +75,8 @@ class UpdaterRunner(object):
  
      def _schedule(self):
