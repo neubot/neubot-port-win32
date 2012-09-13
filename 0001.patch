@@ -1,0 +1,44 @@
+commit d3ccf3a652f0694a66d8c8086fb0015fbef7c437
+Author: Simone Basso <bassosimone@gmail.com>
+Date:   Tue Sep 11 15:24:31 2012 +0200
+
+    updater: allow to configure win32 update check interval
+
+diff --git a/neubot/config.py b/neubot/config.py
+index 8b9ef39..6b4683d 100644
+--- a/neubot/config.py
++++ b/neubot/config.py
+@@ -216,8 +216,9 @@ CONFIG.register_defaults({
+     "uuid": "",
+     "version": "",
+     'win32_updater': 1,
+-    "www.lang": "default",
+     "win32_updater_channel": "latest",
++    "win32_updater_interval": 1800,
++    "www.lang": "default",
+ })
+ CONFIG.register_descriptions({
+     "agent.api": "Enable API server",
+@@ -242,6 +243,7 @@ CONFIG.register_descriptions({
+     "uuid": "Random unique identifier of this Neubot agent",
+     "version": "Version number of the Neubot database schema",
+     'win32_updater': 'Set to nonzero to enable Win32 automatic updates',
+-    "www.lang": "Web GUI language (`default' means: use browser default)",
+     "win32_updater_channel": "The channel used for automatic updates",
++    "win32_updater_interval": "Interval between check for updates",
++    "www.lang": "Web GUI language (`default' means: use browser default)",
+ })
+diff --git a/neubot/updater_runner.py b/neubot/updater_runner.py
+index 1788746..968cd5c 100644
+--- a/neubot/updater_runner.py
++++ b/neubot/updater_runner.py
+@@ -75,7 +75,8 @@ class UpdaterRunner(object):
+ 
+     def _schedule(self):
+         ''' Schedule next check for updates '''
+-        POLLER.sched(1800, self.retrieve_versioninfo)
++        POLLER.sched(CONFIG['win32_updater_interval'],
++                     self.retrieve_versioninfo)
+ 
+     def retrieve_versioninfo(self):
+         ''' Retrieve version information '''
