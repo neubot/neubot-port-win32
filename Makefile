@@ -37,5 +37,5 @@ all:
 			$(SOURCE).sig $(SOURCE)
 	tar -xzf $(SOURCE)
 	for PATCH in $$(ls *.patch); do					\
-		(cd neubot-0.4.14 && git apply ../$$PATCH);		\
+		(cd neubot-0.4.14 && patch -Np1 -i ../$$PATCH);		\
 	done
