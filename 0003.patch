@@ -49,7 +49,7 @@ index 6b5db4a..ad2df3c 100644
          # its own listening socket.  The ``-k`` argument on the
          # command line instructs the child process to request this
          # process to exit.  Of course the child does that before
--        # attempting to listen a new socket.  Still, there is a
+-        # attempting to listen to a new socket.  Still, there is a
 -        # potential race, which means that the child process has
 -        # to wait until this process' socket is closed.
 +        # attempting to listen a new socket.
