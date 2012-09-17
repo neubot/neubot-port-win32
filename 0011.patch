@@ -1,0 +1,17 @@
+system.py: win32: make sure we init database dir
+
+The check for running as root must be performed in the case of posix
+only.  A similar fix was committed to database/__init__.py but I didn't
+noticed system.py needed to be patched as well.
+
+--- a/neubot/system.py.orig	2012-09-17 23:31:34.000000000 +0200
++++ b/neubot/system.py		2012-09-17 23:31:48.000000000 +0200
+@@ -71,7 +71,7 @@
+ 
+     pathname = os.path.abspath(pathname)
+ 
+-    if not running_as_root():
++    if os.name == 'posix' and not running_as_root():
+         return pathname
+ 
+     _want_rwx_dir(os.path.dirname(pathname))
