@@ -8,6 +8,10 @@ requesting exit, where it is discared.  On the contrary, if the
 client immediately closes the connection, the error may happen on
 the server (subject to a race condition) where it will be logged
 in red, and may raise bug reports.
+
+We can safely stop returing True/False, since no other piece of code
+in Neubot was using it.
+
 ---
  neubot/utils_ctl.py | 13 ++++++++-----
  1 file changed, 8 insertions(+), 5 deletions(-)
