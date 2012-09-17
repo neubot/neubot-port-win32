@@ -26,7 +26,7 @@ index 318d7d6..17c7ba0 100644
 +        #
 +        # New /api/exit does not send any response, therefore the piece
 +        # of code below is going to fail.  Anyway, it's not a big deal
-+        # because the whole function is wrapper by a blanket try..except.
++        # because the whole function is wrapped by a blanket try..except.
 +        #
 +        response = connection.getresponse()
 +        response.read()
