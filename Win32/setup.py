@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 #
-# Copyright (c) 2011 Simone Basso <bassosimone@gmail.com>,
-#  NEXA Center for Internet & Society at Politecnico di Torino
+# Copyright (c) 2011-2012
+#     Nexa Center for Internet & Society, Politecnico di Torino (DAUIN)
+#     and Simone Basso <bassosimone@gmail.com>
 #
 # This file is part of Neubot <http://www.neubot.org/>.
 #
@@ -25,7 +26,6 @@
  to generate an installer for Windows.
 '''
 
-import hashlib
 import subprocess
 import distutils.core
 import os.path
@@ -39,20 +39,26 @@ try:
 except ImportError:
     sys.exit('Please install py2exe.')
 
-# To toplevel dir ($TOP/Win32/setup.py -> $TOP)
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+VERSION = '0.4.15'
+VERSION_SPLIT = VERSION.split('.')
+NEUBOTDIR = 'neubot-%s' % VERSION
+NUMERIC_VERSION = '%d.%03d%03d999' % (int(VERSION_SPLIT[0]),
+                                      int(VERSION_SPLIT[1]),
+                                      int(VERSION_SPLIT[2]))
+NUMERIC_DIR = NUMERIC_VERSION
+NUMERIC_TARBALL = '%s.tar.gz' % NUMERIC_VERSION
+NEUBOT_INSTALLER = 'neubot-%s-setup.exe' % VERSION
 
-# Copied from scripts/cksum.py
-def cksum_path(path, aarg):
-    ''' Computes cksum of a given path '''
-    cksum = hashlib.new(aarg)
-    filep = open(path, 'rb')
-    cksum.update(filep.read())
-    return '%s  %s\n' % (cksum.hexdigest(), path)
+# $TOP/Win32/setup.py -> $TOP/neubot-VERSION
+TOPDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKDIR = os.sep.join([TOPDIR, NEUBOTDIR])
+
+# Run in neubot sources dir
+os.chdir(WORKDIR)
 
 CONSOLE = [{
     "icon_resources": [(0, "neubot/www/favicon.ico")],
-    "script": "Win32/neubot",
+    "script": "../Win32/neubot",
 }]
 
 PACKAGES = [
@@ -89,38 +95,39 @@ def fill_package_data(entry):
 fill_package_data("neubot/www")
 
 SCRIPTS = [
-    "Win32/neubot",
-    "Win32/neubotw",
+    "../Win32/neubot",
+    "../Win32/neubotw",
 ]
 
 WINDOWS = [{
     "icon_resources": [(0, "neubot/www/favicon.ico")],
-    "script": "Win32/neubotw",
+    "script": "../Win32/neubotw",
 }]
 
 RUN_PY2EXE = False
-if os.name == "nt" and len(sys.argv) == 1 and py2exe:
+if os.name == "nt" and len(sys.argv) == 1:
     sys.argv.append("py2exe")
     RUN_PY2EXE = True
 
-distutils.core.setup(name="neubot",
+distutils.core.setup(
+                     name="neubot",
                      description="the network neutrality bot",
                      license="GPLv3",
                      packages=PACKAGES,
                      package_data={"neubot": PACKAGE_DATA},
-                     version="0.4.15",
+                     version=VERSION,
                      author="Simone Basso",
                      author_email="bassosimone@gmail.com",
                      windows=WINDOWS,
                      console=CONSOLE,
-                     url="http://www.neubot.org/",
+                     url="http://neubot.org/",
                      scripts=SCRIPTS,
                     )
 
 if RUN_PY2EXE:
-    IGNORER = shutil.ignore_patterns('.DS_Store')
+    IGNORER = shutil.ignore_patterns('.DS_Store')  # Skip MacOSX crap
     shutil.copytree("neubot/www", "dist/www", ignore=IGNORER)
-    shutil.copy('Win32/openssl.exe', 'dist/')
+    shutil.copy('../Win32/openssl.exe', 'dist/')
     shutil.copy('pubkey.pem', 'dist/')
 
     if "PROGRAMFILES" in os.environ:
@@ -132,27 +139,22 @@ if RUN_PY2EXE:
             # of performing a chdir(2) in the directory where its
             # script is located.
             #
-            FILEP = open('Win32/neubot.nsi')
+
+            FILEP = open('../Win32/neubot.nsi')
             subprocess.call([MAKENSIS, '/DUNINST' , '-'], stdin=FILEP)
             FILEP.close()
 
             subprocess.call(['uninstaller-generator.exe'])
 
-            FILEP = open('Win32/neubot.nsi')
+            FILEP = open('../Win32/neubot.nsi')
             subprocess.call([MAKENSIS, '-'], stdin=FILEP)
             FILEP.close()
 
     # Create tarball for auto-update
-    shutil.copytree('dist', '0.004015999')
-    TARBALL = tarfile.open('0.004015999.tar.gz', 'w:gz')
-    TARBALL.add('0.004015999')
+    shutil.copytree('dist', NUMERIC_DIR)
+    TARBALL = tarfile.open(NUMERIC_TARBALL, 'w:gz')
+    TARBALL.add(NUMERIC_DIR)
     TARBALL.close()
-
-    # Create SHA256 sum
-    CKSUM = cksum_path('0.004015999.tar.gz', 'sha256')
-    CKSUMFILE = open('0.004015999.tar.gz.sha256', 'wb')
-    CKSUMFILE.write(CKSUM)
-    CKSUMFILE.close()
 
     #
     # Move results into wdist and wdist/win32.  We keep in
@@ -161,8 +163,8 @@ if RUN_PY2EXE:
     #
     os.mkdir('wdist')
     os.mkdir('wdist/win32')
-    shutil.move('uninstaller-generator.exe', 'wdist')
-    shutil.move('neubot-0.4.15-setup.exe', 'wdist')
-    shutil.move('0.004015999', 'wdist')
-    shutil.move('0.004015999.tar.gz', 'wdist/win32')
-    shutil.move('0.004015999.tar.gz.sha256', 'wdist/win32')
+    os.mkdir('wdist/tmp')
+    shutil.move('uninstaller-generator.exe', 'wdist/tmp')
+    shutil.move(NEUBOT_INSTALLER, 'wdist')
+    shutil.move(NUMERIC_DIR, 'wdist/tmp')
+    shutil.move(NUMERIC_TARBALL, 'wdist/win32')
