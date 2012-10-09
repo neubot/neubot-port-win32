@@ -1,8 +1,9 @@
 # Makefile
 
 #
-# Copyright (c) 2012 Simone Basso <bassosimone@gmail.com>,
-#  NEXA Center for Internet & Society at Politecnico di Torino
+# Copyright (c) 2012
+#     Nexa Center for Internet & Society, Politecnico di Torino (DAUIN)
+#     and Simone Basso <bassosimone@gmail.com>
 #
 # This file is part of Neubot <http://www.neubot.org/>.
 #
@@ -20,22 +21,18 @@
 # along with Neubot.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = $$(cat VERSION)
-MIRROR = http://releases.neubot.org/source
+VERSION = 0.4.15
+MIRROR = http://releases.neubot.org/snapshots
 SOURCE = neubot-$(VERSION).tar.gz
 
 .PHONY: all
 
 all:
-	wget $(MIRROR)/VERSION
-	wget $(MIRROR)/VERSION.sig
-	openssl dgst -sha256 -verify pubkey.pem -signature		\
-			VERSION.sig VERSION
 	wget $(MIRROR)/$(SOURCE)
 	wget $(MIRROR)/$(SOURCE).sig
 	openssl dgst -sha256 -verify pubkey.pem -signature		\
 			$(SOURCE).sig $(SOURCE)
 	tar -xzf $(SOURCE)
 	for PATCH in $$(ls *.patch); do					\
-		(cd neubot-0.4.14 && patch -Np1 -i ../$$PATCH);		\
+		(cd neubot-$(VERSION) && patch -Np1 -i ../$$PATCH);	\
 	done
