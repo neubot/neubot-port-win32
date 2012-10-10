@@ -33,7 +33,7 @@ outfile "neubot-0.4.15.3-setup.exe"
 # $APPDATA, should not be used because it is for stuff that must
 # migrate with the user profile.
 #
-installdir "$LOCALAPPDATA\Neubot\0.004015999"
+installdir "$LOCALAPPDATA\Neubot\0.004015003"
 
 !endif
 
