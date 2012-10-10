@@ -39,12 +39,13 @@ try:
 except ImportError:
     sys.exit('Please install py2exe.')
 
-VERSION = '0.4.15'
+VERSION = '0.4.15.3'
 VERSION_SPLIT = VERSION.split('.')
 NEUBOTDIR = 'neubot-%s' % VERSION
-NUMERIC_VERSION = '%d.%03d%03d999' % (int(VERSION_SPLIT[0]),
-                                      int(VERSION_SPLIT[1]),
-                                      int(VERSION_SPLIT[2]))
+NUMERIC_VERSION = '%d.%03d%03d%03d' % (int(VERSION_SPLIT[0]),
+                                       int(VERSION_SPLIT[1]),
+                                       int(VERSION_SPLIT[2]),
+                                       int(VERSION_SPLIT[3]))
 NUMERIC_DIR = NUMERIC_VERSION
 NUMERIC_TARBALL = '%s.tar.gz' % NUMERIC_VERSION
 NEUBOT_INSTALLER = 'neubot-%s-setup.exe' % VERSION
