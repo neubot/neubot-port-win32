@@ -1,4 +1,4 @@
-# Makefile
+# Makefile.in
 
 #
 # Copyright (c) 2012
@@ -21,7 +21,7 @@
 # along with Neubot.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = 0.4.15.3
+VERSION = @CANONICAL_VERSION@
 MIRROR = http://releases.neubot.org/_packages
 SOURCE = neubot-$(VERSION).tar.gz
 
