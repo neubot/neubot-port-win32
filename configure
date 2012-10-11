@@ -33,10 +33,30 @@ RCNUM=$(echo $CANONICAL_VERSION|awk -F. '{print $4}')
 NUMERIC_VERSION=$(printf "%d.%03d%03d%03d" $MAJOR $MINOR $PATCH $RCNUM)
 echo "configure: numeric version: $NUMERIC_VERSION"
 
-OUTPUT_FILES="Makefile Win32/neubot.nsi Win32/setup.py"
+OUTPUT_FILES="Win32/neubot.nsi Win32/setup.py"
 for FILE in $OUTPUT_FILES; do
     echo "configure: $FILE.in -> $FILE"
-    sed -e "s/@CANONICAL_VERSION@/$CANONICAL_VERSION/g" \
-        -e "s/@NUMERIC_VERSION@/$NUMERIC_VERSION/g" \
+    sed -e "s/@CANONICAL_VERSION@/$CANONICAL_VERSION/g"			\
+        -e "s/@NUMERIC_VERSION@/$NUMERIC_VERSION/g"			\
         $FILE.in > $FILE
 done
+
+MIRROR=http://releases.neubot.org/_packages
+SOURCE=neubot-$CANONICAL_VERSION.tar.gz
+
+echo "configure: downloading $SOURCE $SOURCE.sig"
+curl -O $MIRROR/$SOURCE
+curl -O $MIRROR/$SOURCE.sig
+
+echo "configure: checking digital signature with OpenSSL"
+openssl dgst -sha256 -verify pubkey.pem -signature $SOURCE.sig $SOURCE
+
+echo "configure: extracting from $SOURCE"
+tar -xzf $SOURCE
+
+for PATCH in `ls *.patch 2> /dev/null`; do
+    echo "configure: applying patch $PATCH"
+    (cd neubot-$CANONICAL_VERSION && patch -Np1 -i ../$PATCH);
+done
+
+echo "configure: now you can build Neubot $CANONICAL_VERSION"
