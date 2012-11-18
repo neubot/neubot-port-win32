@@ -1,0 +1,17 @@
+diff --git a/neubot/raw_clnt.py b/neubot/raw_clnt.py
+index 8aad5bb..8119e80 100644
+--- a/neubot/raw_clnt.py
++++ b/neubot/raw_clnt.py
+@@ -83,7 +83,11 @@ class RawClient(Handler):
+         Stream(sock, self._connection_ready, self._connection_lost,
+           sslconfig, '', ClientContext(state))
+         STATE.update('test', 'raw')
+-        state['mss'] = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_MAXSEG)
++        try:
++            state['mss'] = sock.getsockopt(socket.IPPROTO_TCP,
++              socket.TCP_MAXSEG)
++        except:
++            state['mss'] = 1460  # XXX Windows XP
+         state['rcvr_data'] = []
+ 
+     def _connection_ready(self, stream):
