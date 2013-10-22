@@ -1,0 +1,12 @@
+--- neubot-0.4.16.8/neubot/utils_modules.py.orig	Tue Oct 22 15:33:45 2013
++++ neubot-0.4.16.8/neubot/utils_modules.py	Tue Oct 22 15:34:29 2013
+@@ -41,6 +41,9 @@
+ 
+     rootdir = utils_hier.ROOTDIR
+ 
++    if rootdir not in sys.path:
++        sys.path.insert(0, rootdir)
++
+     for name in os.listdir(rootdir):
+         pathname = os.sep.join([rootdir, name])
+         if not os.path.isdir(pathname):
