@@ -63,6 +63,7 @@ CONSOLE = [{
 }]
 
 PACKAGES = [
+    "mod_dash",
     "neubot",
 ]
 
