@@ -130,6 +130,7 @@ if RUN_PY2EXE:
     shutil.copytree("neubot/www", "dist/www", ignore=IGNORER)
     shutil.copy('../Win32/openssl.exe', 'dist/')
     shutil.copy('pubkey.pem', 'dist/')
+    shutil.copytree("mod_dash", "dist/mod_dash", ignore=IGNORER)
 
     if "PROGRAMFILES" in os.environ:
         MAKENSIS = os.environ["PROGRAMFILES"] + "\\NSIS\\makensis.exe"
