@@ -33,6 +33,7 @@ import shutil
 import sys
 import tarfile
 import glob
+import compileall
 
 try:
     import py2exe
@@ -131,6 +132,8 @@ if RUN_PY2EXE:
     shutil.copy('../Win32/openssl.exe', 'dist/')
     shutil.copy('pubkey.pem', 'dist/')
     shutil.copytree("mod_dash", "dist/mod_dash", ignore=IGNORER)
+
+    compileall.compile_dir("dist/mod_dash")
 
     if "PROGRAMFILES" in os.environ:
         MAKENSIS = os.environ["PROGRAMFILES"] + "\\NSIS\\makensis.exe"
